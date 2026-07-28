@@ -1,2 +1,12 @@
-# softwareQinc-qpp
-Quantum++ (qpp) is a modern C++20 header-only quantum computing library. It provides a comprehensive framework for quantum information processing, quantum state/operator manipulation, and general quantum mathematical calculations, leveraging the Eigen linear algebra library.
+# CPP Quantum Math Libraries
+
+Modern C++20 header-only quantum computing library.
+
+Provides a lightweight framework for quantum state manipulation, gate operations, and quantum information processing. Fully self-contained with zero external dependencies.
+
+### Features
+- Statevector simulation
+- Single- and two-qubit gates (Pauli, Hadamard, Phase, Rotation, CNOT, CZ, SWAP)
+- Measurement with wavefunction collapse
+- Built-in random number generation
+- Pure C++20, header-only
