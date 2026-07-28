@@ -1,4 +1,4 @@
-#include "qm.hpp"
+#include "../include/qm.hpp"
 #include <iostream>
 #include <chrono>
 #include <cmath>
