@@ -13,11 +13,11 @@ else()
     add_compile_options(-O3 -Wall -Wextra -pedantic)
 endif()
 
-# Core Include Directories (pointing to the root src directory)
+# Core Include Directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
 # Core Integration Test Executable
-add_executable(qpp_test ${CMAKE_CURRENT_SOURCE_DIR}/../src/share/1.cpp)
+add_executable(qpp_test 1.cpp)
 
 # Enable CTest Target Execution
 enable_testing()
