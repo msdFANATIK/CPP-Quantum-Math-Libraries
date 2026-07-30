@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../core/constants.hpp"
+
 namespace qm {
 
 /**
@@ -32,9 +34,6 @@ constexpr double atan_backend(double x) noexcept {
  * @return Angle in radians in range [-PI, PI].
  */
 constexpr double atan2(double y, double x) noexcept {
-    constexpr double PI      = 3.14159265358979323846;
-    constexpr double HALF_PI = 1.57079632679489661923;
-
     if (x == 0.0) {
         if (y > 0.0) return HALF_PI;
         if (y < 0.0) return -HALF_PI;
