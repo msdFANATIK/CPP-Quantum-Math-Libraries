@@ -5,19 +5,20 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Optimization Flags for Native Performance
+# Compiler Optimization Flags
 if(MSVC)
     add_compile_options(/O2 /W4)
 else()
-    add_compile_options(-O3 -Wall -Wextra -pedantic -march=native)
+    # Omit -march=native to guarantee binary compatibility across GitHub Actions runners
+    add_compile_options(-O3 -Wall -Wextra -pedantic)
 endif()
 
-# Header-only or Core Include Directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+# Core Include Directories (pointing to the root src directory)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
 # Core Integration Test Executable
-add_executable(qpp_test 1.cpp)
+add_executable(qpp_test ${CMAKE_CURRENT_SOURCE_DIR}/../src/share/1.cpp)
 
-# Enable Testing Target
+# Enable CTest Target Execution
 enable_testing()
 add_test(NAME IntegrationTestSuite COMMAND qpp_test)
