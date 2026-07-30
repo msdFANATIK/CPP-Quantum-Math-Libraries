@@ -17,7 +17,7 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 # Core Integration Test Executable
-add_executable(qpp_test 1.cpp)
+add_executable(qpp_test all.cpp)
 
 # Enable CTest Target Execution
 enable_testing()
