@@ -169,6 +169,12 @@ struct Vector {
 
     /** @brief Swaps internal data state with another vector. */
     void swap(Vector& other) noexcept { impl.swap(other.impl); }
+
+    /** @brief Zeroes out all elements fast without reallocation (zero external deps). */
+    void fill_zero() noexcept { impl.fill_zero(); }
+
+    /** @brief Resets vector to zero-filled state. */
+    void reset() noexcept { impl.fill_zero(); }
 };
 
 } // namespace qm
