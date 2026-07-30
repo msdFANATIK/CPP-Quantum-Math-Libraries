@@ -1,23 +1,47 @@
 cmake_minimum_required(VERSION 3.20)
-project(QuantumPP_MiniEngineTEST VERSION 0.1)
+
+project(CPP-Quantum-Math-Libraries
+    VERSION 1.0.0
+    DESCRIPTION "High-performance C++20 Quantum Computing and Statevector Simulation Library"
+    LANGUAGES CXX
+)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Optimization Flags for Native Performance
-if(MSVC)
-    add_compile_options(/O2 /W4)
-else()
-    add_compile_options(-O3 -Wall -Wextra -pedantic -march=native)
+find_package(OpenMP REQUIRED)
+
+add_executable(qml_benchmark src/share/benchmark.cpp)
+
+target_include_directories(qml_benchmark PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/share
+)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(qml_benchmark PRIVATE
+        -O3
+        -march=native
+        -ffast-math
+        -flto
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Wconversion
+        -Wshadow
+    )
+    target_link_options(qml_benchmark PRIVATE -flto)
+elseif(MSVC)
+    target_compile_options(qml_benchmark PRIVATE
+        /O2
+        /arch:AVX2
+        /fp:fast
+        /GL
+        /W4
+    )
+    target_link_options(qml_benchmark PRIVATE /LTCG)
 endif()
 
-# Header-only or Core Include Directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-# Core Integration Test Executable
-add_executable(qpp_test 1.cpp)
-
-# Enable Testing Target
-enable_testing()
-add_test(NAME IntegrationTestSuite COMMAND qpp_test)
+target_link_libraries(qml_benchmark PRIVATE 
+    OpenMP::OpenMP_CXX
+)
