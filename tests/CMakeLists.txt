@@ -14,7 +14,7 @@ else()
 endif()
 
 # Core Include Directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 # Core Integration Test Executable
 add_executable(qpp_test 1.cpp)
