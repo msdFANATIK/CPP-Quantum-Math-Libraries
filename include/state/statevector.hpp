@@ -42,7 +42,7 @@ struct State {
     // Amplitude access
     // ---------------------------------------------------------------------
 
-    Complex&       operator[](unsigned i)       noexcept { return amp[i]; }
+    Complex&       operator[](unsigned i)        noexcept { return amp[i]; }
     const Complex& operator[](unsigned i) const noexcept { return amp[i]; }
 
     Complex  get(unsigned i) const noexcept { return amp[i]; }
@@ -56,6 +56,8 @@ struct State {
     double norm_sq() const noexcept {
         double sum = 0.0;
         const unsigned sz = amp.get_size();
+
+        #pragma omp parallel for if(sz >= 8192) reduction(+:sum) schedule(static)
         for (unsigned i = 0; i < sz; ++i) {
             sum += amp[i].norm_sq();
         }
@@ -74,6 +76,8 @@ struct State {
 
         const double inv = inv_sqrt(n2);
         const unsigned sz = amp.get_size();
+
+        #pragma omp parallel for if(sz >= 8192) schedule(static)
         for (unsigned i = 0; i < sz; ++i) {
             amp[i] *= inv;
         }
@@ -106,6 +110,7 @@ struct State {
         const unsigned high_mask = ~low_mask;
         const unsigned half_sz = amp.get_size() >> 1;
 
+        #pragma omp parallel for if(half_sz >= 4096) schedule(static)
         for (unsigned i = 0; i < half_sz; ++i) {
             const unsigned k0 = ((i & high_mask) << 1) | (i & low_mask);
             const unsigned k1 = k0 | mask;
@@ -146,6 +151,7 @@ struct State {
         const unsigned t_mask = 1u << target;
         const unsigned quarter_sz = amp.get_size() >> 2;
 
+        #pragma omp parallel for if(quarter_sz >= 2048) schedule(static)
         for (unsigned i = 0; i < quarter_sz; ++i) {
             const unsigned idx00 = (i & m0) | ((i & m1) << 1) | ((i & m2) << 2);
             const unsigned idx01 = idx00 | t_mask;
@@ -187,6 +193,7 @@ struct State {
         const unsigned t_mask = 1u << target;
         const unsigned quarter_sz = amp.get_size() >> 2;
 
+        #pragma omp parallel for if(quarter_sz >= 2048) schedule(static)
         for (unsigned i = 0; i < quarter_sz; ++i) {
             const unsigned base = (i & m0) | ((i & m1) << 1) | ((i & m2) << 2);
             const unsigned idx10 = base | c_mask;
@@ -212,6 +219,7 @@ struct State {
         const unsigned t_mask = 1u << target;
         const unsigned quarter_sz = amp.get_size() >> 2;
 
+        #pragma omp parallel for if(quarter_sz >= 2048) schedule(static)
         for (unsigned i = 0; i < quarter_sz; ++i) {
             const unsigned idx11 = (i & m0) | ((i & m1) << 1) | ((i & m2) << 2) | c_mask | t_mask;
             amp[idx11] = -amp[idx11];
@@ -232,6 +240,7 @@ struct State {
         const unsigned m2_mask = 1u << q2;
         const unsigned quarter_sz = amp.get_size() >> 2;
 
+        #pragma omp parallel for if(quarter_sz >= 2048) schedule(static)
         for (unsigned i = 0; i < quarter_sz; ++i) {
             const unsigned base = (i & m0) | ((i & m1) << 1) | ((i & m2) << 2);
             const unsigned idx10 = base | m1_mask;
@@ -241,6 +250,21 @@ struct State {
             amp[idx10] = amp[idx01];
             amp[idx01] = tmp;
         }
+    }
+
+    // ---------------------------------------------------------------------
+    // Reset state (Zero-allocation)
+    // ---------------------------------------------------------------------
+
+    /**
+     * @brief Resets statevector to computational state |0...0⟩ without external dependencies.
+     */
+    void reset() noexcept {
+        if (amp.empty()) return;
+
+        amp.fill_zero();
+
+        amp[0] = Complex{1.0, 0.0};
     }
 };
 
