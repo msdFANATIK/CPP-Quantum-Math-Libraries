@@ -47,7 +47,6 @@ using GateType   = InstructionType;
 using GateInst   = Instruction;
 
 // --- Quantum State Aliases ---
-using State      = State;
 using Wavefunction = State;
 
 // --- Measurement Aliases ---
