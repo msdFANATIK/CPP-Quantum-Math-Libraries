@@ -73,7 +73,7 @@ struct Array {
         }
     }
 
-    Array(const Array& other) : data(nullptr), size(other.size), capacity(other.size) { // ВИПРАВЛЕНО: capacity = size
+    Array(const Array& other) : data(nullptr), size(other.size), capacity(other.size) {
         if (size > 0) {
             data = new Complex[size];
             for (unsigned i = 0; i < size; ++i) {
