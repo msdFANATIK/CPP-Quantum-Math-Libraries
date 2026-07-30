@@ -1,4 +1,3 @@
-===================================================================
    Quantum++ Mini Engine — Core Integration & RNG Benchmark
 ===================================================================
 Environment : C++20 | Clang/GCC -O2 / -O3
@@ -63,4 +62,4 @@ Quantum++ Mini Engine — Core Integration Test Suite
  State Re-normalization: OK
 
 ====================================================
-All execution integration tests completed successfully!
+All execution integration tests completed successfully! :)
