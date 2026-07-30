@@ -142,7 +142,7 @@ struct Complex {
     }
 
     /** @brief Returns the complex conjugate z* = re - i * im. */
-    constexpr Complex conjugate() const noexcept {
+    constexpr Complex conj() const noexcept {
         return {re, -im};
     }
 
