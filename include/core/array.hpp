@@ -237,6 +237,16 @@ struct Array {
         capacity = other.capacity;
         other.capacity = tc;
     }
+
+    /** @brief Zeroes out the active buffer using raw pointer iteration (zero external deps). */
+    void fill_zero() noexcept {
+        if (!data || size == 0) return;
+
+        #pragma omp parallel for if(size >= 8192) schedule(static)
+        for (unsigned i = 0; i < size; ++i) {
+            data[i] = Complex{0.0, 0.0};
+        }
+    }
 };
 
 } // namespace qm
