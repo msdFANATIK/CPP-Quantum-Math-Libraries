@@ -48,3 +48,30 @@ Then include the library:
 ```cpp
 #include <qm.hpp>
 ```
+
+## Quick start
+
+Try this in a fresh clone — compiles a tiny smoke-test:
+
+Clone:
+```bash
+git clone https://github.com/msdFANATIK/CPP-Quantum-Math-Libraries.git
+cd CPP-Quantum-Math-Libraries
+```
+
+Build & run the example:
+
+```bash
+g++ -std=c++20 -Iinclude examples/hello_qm.cpp -O3 -o hello_qm
+./hello_qm
+```
+
+CMake example:
+
+```bash
+mkdir build && cd build
+cmake -S ../examples -B .
+cmake --build .
+./hello_qm
+```
+
