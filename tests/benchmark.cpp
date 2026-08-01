@@ -1,17 +1,16 @@
 #include "../include/qm.hpp"
 #include <cstdio>
 
+#if defined(_MSC_VER)
+    #include <intrin.h>
+#endif
+
 namespace qm {
 namespace bench {
 
 /**
  * @brief Returns the current CPU cycle counter value (TSC).
  */
-inline unsigned long long cputicks() noexcept {
-#if defined(_MSC_VER)
-    #include <intrin.h>
-#endif
-
 inline unsigned long long cputicks() noexcept {
 #if defined(_MSC_VER)
     // Microsoft Visual C++ (MSVC)
