@@ -20,23 +20,23 @@ int main() {
     // 2. Iterate using range-based for loop (testing begin/end pointers)
     double total_norm_sq = 0.0;
     for (const auto& amp : vec) {
-        total_norm_sq += (amp.real * amp.real + amp.imag * amp.imag);
+        total_norm_sq += (amp.real() * amp.real() + amp.imag() * amp.imag());
     }
 
     // 3. Test element access & C-style contiguous data access
     qm::Complex* raw_ptr = vec.data();
-    assert(raw_ptr[0].real == 1.0 && "Data contiguous layout failure");
+    assert(raw_ptr[0].real() == 1.0 && "Data contiguous layout failure");
 
     // Access using operator[] and front/back
     vec.back() = qm::Complex{0.5, -0.5};
-    assert(vec[2].imag == -0.5 && "Modifier via back() failed");
+    assert(vec[2].imag() == -0.5 && "Modifier via back() failed");
 
     // 4. Test fast memory clearing and reset routines
     const unsigned prev_cap = vec.capacity();
     vec.reset(); // Fast zero-fill without heap reallocation
 
     for (unsigned i = 0; i < vec.size(); ++i) {
-        assert(vec[i].real == 0.0 && vec[i].imag == 0.0 && "Reset failed to zero out data");
+        assert(vec[i].real() == 0.0 && vec[i].imag() == 0.0 && "Reset failed to zero out data");
     }
     assert(vec.capacity() == prev_cap && "Reset must retain capacity");
 
