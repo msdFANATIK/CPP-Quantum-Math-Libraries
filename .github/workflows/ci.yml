@@ -1,0 +1,22 @@
+name: CI - build example
+
+on:
+  push:
+    branches: [ main, quickstart-and-ci ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-example:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build essentials
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Compile and run hello example
+        run: |
+          g++ -std=c++20 -Iinclude examples/hello_qm.cpp -O3 -o hello_qm
+          ./hello_qm

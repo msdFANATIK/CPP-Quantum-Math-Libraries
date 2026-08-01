@@ -21,6 +21,32 @@ Built from scratch with zero external dependencies and a custom math core.
 - Pure C++20, header-only
 - Zero dependencies 
 
+## Quick start
+
+Try this in a fresh clone — compiles a tiny smoke-test:
+
+Clone:
+```bash
+git clone https://github.com/msdFANATIK/CPP-Quantum-Math-Libraries.git
+cd CPP-Quantum-Math-Libraries
+```
+
+Build & run the example:
+```bash
+g++ -std=c++20 -Iinclude examples/hello_qm.cpp -O3 -o hello_qm
+./hello_qm
+```
+
+CMake example:
+```bash
+mkdir build && cd build
+cmake -S ../examples -B .
+cmake --build .
+./hello_qm
+```
+
+This gives newcomers a one-command evaluation path and a visible example to copy.
+
 ## Installation
 
 This library is header-only. No compilation or linking is required.
