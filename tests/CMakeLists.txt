@@ -12,6 +12,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(OpenMP REQUIRED)
 
+if(MSVC)
+    add_compile_options(/openmp:llvm)
+else()
+    add_compile_options(${OpenMP_CXX_FLAGS})
+endif()
+
+
 add_executable(qml_benchmark benchmark.cpp)
 
 target_include_directories(qml_benchmark PRIVATE 
