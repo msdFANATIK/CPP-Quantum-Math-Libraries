@@ -1,5 +1,5 @@
 #include "../include/core/vector_api.hpp"
-#incclude "../include/qm.hpp"
+#include "../include/qm.hpp"
 #include <cstdio>
 #include <cassert>
 #include <cmath>
