@@ -8,11 +8,21 @@ namespace bench {
  * @brief Returns the current CPU cycle counter value (TSC).
  */
 inline unsigned long long cputicks() noexcept {
-#if defined(__x86_64__) || defined(_M_X64)
+#if defined(_MSC_VER)
+    #include <intrin.h>
+#endif
+
+inline unsigned long long cputicks() noexcept {
+#if defined(_MSC_VER)
+    // Microsoft Visual C++ (MSVC)
+    return __rdtsc();
+#elif defined(__x86_64__) || defined(_M_X64)
+    // GCC / Clang x86_64
     unsigned int lo, hi;
     __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
     return ((unsigned long long)hi << 32) | lo;
 #elif defined(__aarch64__)
+    // ARM64 (macOS / Linux)
     unsigned long long val;
     __asm__ __volatile__("mrs %0, cntvct_el0" : "=r" (val));
     return val;
