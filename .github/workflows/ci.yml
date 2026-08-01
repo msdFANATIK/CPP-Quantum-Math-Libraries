@@ -14,9 +14,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install build essentials
-        run: sudo apt-get update && sudo apt-get install -y build-essential
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
 
-      - name: Compile and run hello example
+      - name: Compile and run examples (g++)
         run: |
           g++ -std=c++20 -Iinclude examples/hello_qm.cpp -O3 -o hello_qm
           ./hello_qm
+
+          g++ -std=c++20 -Iinclude examples/vector_demo.cpp -O3 -o vector_demo
+          ./vector_demo
+          
