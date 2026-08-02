@@ -29,15 +29,14 @@ public:
         instructions.push_back(Instruction::make_2q(control, target, m));
     }
 
+    void apply_three(unsigned c1, unsigned c2, unsigned target, const Matrix8x8& m) {
+        instructions.push_back(Instruction::make_3q(c1, c2, target, m));
+    }
+
     void reserve(size_t gate_count) {
         instructions.reserve(gate_count);
     }
 
-    /**
-     * @brief Executes the circuit on a statevector without measurement steps.
-     * @param state Target quantum statevector (modified in-place)
-     * @return true if execution succeeded, false on qubit mismatch.
-     */
     bool run_unitary(State& state) const noexcept {
         if (state.num_qubits() != num_qubits) {
             return false;
@@ -50,6 +49,8 @@ public:
                 state.apply(inst.gate.gate1, inst.target);
             } else if (inst.type == InstructionType::Gate2Q) {
                 state.apply(inst.gate.gate2, inst.control, inst.target);
+            } else if (inst.type == InstructionType::Gate3Q) {
+                state.apply(inst.gate.gate3, inst.control, inst.control2, inst.target);
             }
         }
         return true;

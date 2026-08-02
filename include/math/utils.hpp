@@ -6,6 +6,12 @@
 
 namespace qm {
 
+/**
+ * @brief Computes the square root of a number at compile-time (constexpr).
+ * 
+ * @param x Input value.
+ * @return Square root of x, or 0.0 if x <= 0.
+ */
 constexpr double sqrt(double x) noexcept {
     if (x <= 0.0) return 0.0;
 
@@ -17,15 +23,34 @@ constexpr double sqrt(double x) noexcept {
     return y;
 }
 
+/**
+ * @brief Computes the inverse square root ($1 / \sqrt{x}$).
+ * 
+ * @param x Input value.
+ * @return Inverse square root of x, or 0.0 if x <= 0.
+ */
 constexpr double inv_sqrt(double x) noexcept {
     double s = sqrt(x);
     return (s > 0.0) ? (1.0 / s) : 0.0;
 }
 
+/**
+ * @brief Computes the absolute value of a double.
+ */
 constexpr double abs(double x) noexcept {
     return x < 0.0 ? -x : x;
 }
 
+/**
+ * @brief Computes the absolute value (magnitude) of a complex number.
+ */
+constexpr double abs(const Complex& z) noexcept {
+    return qm::sqrt(z.re * z.re + z.im * z.im);
+}
+
+/**
+ * @brief Computes the sine of an angle in radians using Taylor series expansion.
+ */
 constexpr double sin(double x) noexcept {
     constexpr double two_pi = 2.0 * PI;
 
@@ -59,29 +84,43 @@ constexpr double sin(double x) noexcept {
     return flip ? -result : result;
 }
 
+/**
+ * @brief Computes the cosine of an angle in radians.
+ */
 constexpr double cos(double x) noexcept {
     // cos(x) = sin(x + π/2)
     return sin(x + PI * 0.5);
 }
 
-// e^{iθ} = cosθ + i sinθ
+/**
+ * @brief Computes Euler's formula: $e^{i\theta} = \cos\theta + i \sin\theta$.
+ */
 constexpr Complex exp_i(double theta) noexcept {
     return {cos(theta), sin(theta)};
 }
 
+/** @brief Returns module of a complex number (member function). */
 constexpr double Complex::mod() const noexcept {
     return qm::sqrt(re * re + im * im);
 }
 
+/** @brief Returns module of a complex number (global function). */
 constexpr double mod(const Complex& z) noexcept {
     return qm::sqrt(z.re * z.re + z.im * z.im);
 }
 
+/** @brief Returns the smaller of two values. */
 constexpr double min(double a, double b) noexcept { return a < b ? a : b; }
+
+/** @brief Returns the larger of two values. */
 constexpr double max(double a, double b) noexcept { return a > b ? a : b; }
 
+/**
+ * @brief Computes base raised to an integer exponent (base^exp).
+ */
 constexpr double pow(double base, int exp) noexcept {
     if (exp == 0) return 1.0;
+    if (base == 0.0) return 0.0;
     if (exp < 0) {
         base = 1.0 / base;
         exp = -exp;
@@ -95,10 +134,16 @@ constexpr double pow(double base, int exp) noexcept {
     return res;
 }
 
+/**
+ * @brief Computes the argument (phase angle) of a complex number in radians.
+ */
 constexpr double arg(const Complex& z) noexcept { 
     return atan2(z.im, z.re); 
 }
 
+/**
+ * @brief Remainder of the division operation (fmod).
+ */
 constexpr double fmod(double x, double y) noexcept {
     if (y == 0.0) return 0.0;
 
@@ -113,6 +158,9 @@ constexpr double fmod(double x, double y) noexcept {
     return rem;
 }
 
+/**
+ * @brief Rounds down to the largest integer less than or equal to x.
+ */
 constexpr double floor(double x) noexcept {
     const long long i = static_cast<long long>(x);
     if (x < 0.0 && x != static_cast<double>(i)) {
@@ -121,6 +169,9 @@ constexpr double floor(double x) noexcept {
     return static_cast<double>(i);
 }
 
+/**
+ * @brief Rounds up to the smallest integer greater than or equal to x.
+ */
 constexpr double ceil(double x) noexcept {
     const long long i = static_cast<long long>(x);
     if (x > 0.0 && x != static_cast<double>(i)) {
@@ -128,4 +179,5 @@ constexpr double ceil(double x) noexcept {
     }
     return static_cast<double>(i);
 }
+
 } // namespace qm

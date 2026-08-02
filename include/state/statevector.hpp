@@ -253,6 +253,73 @@ struct State {
     }
 
     // ---------------------------------------------------------------------
+    // Three-qubit gates (general)
+    // ---------------------------------------------------------------------
+
+    /**
+     * @brief Applies a general three-qubit gate.
+     * @param gate     8×8 unitary matrix
+     * @param control1 First control qubit
+     * @param control2 Second control qubit
+     * @param target   Target qubit
+     */
+    void apply(const Matrix8x8& gate, unsigned control1, unsigned control2, unsigned target) noexcept {
+        if (control1 >= n || control2 >= n || target >= n || 
+            control1 == control2 || control1 == target || control2 == target) return;
+        apply_direct(gate, control1, control2, target);
+    }
+
+    /** @brief Fast version without dynamic allocations for 3-qubit gates. */
+    void apply_direct(const Matrix8x8& gate, unsigned control1, unsigned control2, unsigned target) noexcept {
+        // Find the order of qubits for correct bit masking
+        unsigned q[3] = {control1, control2, target};
+        // Simple bubble sort for three elements
+        if (q[0] > q[1]) { unsigned t = q[0]; q[0] = q[1]; q[1] = t; }
+        if (q[1] > q[2]) { unsigned t = q[1]; q[1] = q[2]; q[2] = t; }
+        if (q[0] > q[1]) { unsigned t = q[0]; q[0] = q[1]; q[1] = t; }
+
+        unsigned q0 = q[0], q1 = q[1], q2 = q[2];
+
+        const unsigned m0 = (1u << q0) - 1u;
+        const unsigned m1 = ((1u << (q1 - 1u)) - 1u) ^ m0;
+        const unsigned m2 = ((1u << (q2 - 2u)) - 1u) ^ m0 ^ m1;
+        const unsigned m3 = ~(m0 | m1 | m2 | (1u << q0) | (1u << q1) | (1u << q2));
+
+        const unsigned mask_c1 = 1u << control1;
+        const unsigned mask_c2 = 1u << control2;
+        const unsigned mask_t  = 1u << target;
+        
+        const unsigned eighth_sz = amp.get_size() >> 3;
+
+        #pragma omp parallel for if(eighth_sz >= 1024) schedule(static)
+        for (unsigned i = 0; i < eighth_sz; ++i) {
+            const unsigned base = (i & m0) | ((i & m1) << 1) | ((i & m2) << 2) | ((i & m3) << 3);
+
+            unsigned idx[8];
+            idx[0] = base;
+            idx[1] = base | mask_t;
+            idx[2] = base | mask_c2;
+            idx[3] = base | mask_c2 | mask_t;
+            idx[4] = base | mask_c1;
+            idx[5] = base | mask_c1 | mask_t;
+            idx[6] = base | mask_c1 | mask_c2;
+            idx[7] = base | mask_c1 | mask_c2 | mask_t;
+
+            Complex in[8];
+            for (int j = 0; j < 8; ++j) {
+                in[j] = amp[idx[j]];
+            }
+
+            Complex out[8];
+            gate.apply(in, out);
+
+            for (int j = 0; j < 8; ++j) {
+                amp[idx[j]] = out[j];
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------
     // Reset state (Zero-allocation)
     // ---------------------------------------------------------------------
 

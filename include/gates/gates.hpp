@@ -6,11 +6,18 @@
 namespace qm {
 namespace gates {
 
+/**
+ * @brief Quantum logic gates for single, two, and three-qubit systems.
+ * 
+ * Provides standard gate definitions as constexpr or inline matrices 
+ * ready for quantum simulation backends.
+ */
+
 // -------------------------------------------------------------------------
 // Single-Qubit Gates (2x2)
 // -------------------------------------------------------------------------
 
-// Identity (I)
+/** @brief Identity gate (I). Leaves the qubit state unchanged. */
 constexpr Matrix2x2 I() noexcept {
     return Matrix2x2(
         {1.0, 0.0}, {0.0, 0.0},
@@ -18,7 +25,7 @@ constexpr Matrix2x2 I() noexcept {
     );
 }
 
-// Pauli-X (NOT)
+/** @brief Pauli-X gate (NOT). Flips state components (0 to 1, 1 to 0). */
 constexpr Matrix2x2 X() noexcept {
     return Matrix2x2(
         {0.0, 0.0}, {1.0, 0.0},
@@ -26,7 +33,7 @@ constexpr Matrix2x2 X() noexcept {
     );
 }
 
-// Pauli-Y
+/** @brief Pauli-Y gate. Rotation around Y-axis by $\pi$ radians. */
 constexpr Matrix2x2 Y() noexcept {
     return Matrix2x2(
         {0.0, 0.0}, {0.0, -1.0},
@@ -34,7 +41,7 @@ constexpr Matrix2x2 Y() noexcept {
     );
 }
 
-// Pauli-Z
+/** @brief Pauli-Z gate. Phase-flip gate. */
 constexpr Matrix2x2 Z() noexcept {
     return Matrix2x2(
         {1.0, 0.0}, {0.0,  0.0},
@@ -42,7 +49,7 @@ constexpr Matrix2x2 Z() noexcept {
     );
 }
 
-// Hadamard (H)
+/** @brief Hadamard gate (H). Creates an equal superposition state. */
 constexpr Matrix2x2 H() noexcept {
     return Matrix2x2(
         {INV_SQRT2, 0.0}, { INV_SQRT2, 0.0},
@@ -50,7 +57,7 @@ constexpr Matrix2x2 H() noexcept {
     );
 }
 
-// Phase gate S = √Z = diag(1, i)
+/** @brief Phase gate S ($\sqrt{Z}$). Adds a $\pi/2$ phase shift. */
 constexpr Matrix2x2 S() noexcept {
     return Matrix2x2(
         {1.0, 0.0}, {0.0, 0.0},
@@ -58,7 +65,7 @@ constexpr Matrix2x2 S() noexcept {
     );
 }
 
-// S† (S-dagger)
+/** @brief S-dagger gate ($S^\dagger$). Inverse of the S gate. */
 constexpr Matrix2x2 Sdag() noexcept {
     return Matrix2x2(
         {1.0, 0.0}, {0.0,  0.0},
@@ -66,7 +73,7 @@ constexpr Matrix2x2 Sdag() noexcept {
     );
 }
 
-// T gate = √S = diag(1, e^(iπ/4))
+/** @brief T gate ($\sqrt{S}$). Adds a $\pi/4$ phase shift. */
 constexpr Matrix2x2 T() noexcept {
     return Matrix2x2(
         {1.0, 0.0}, {0.0, 0.0},
@@ -74,7 +81,7 @@ constexpr Matrix2x2 T() noexcept {
     );
 }
 
-// T† (T-dagger)
+/** @brief T-dagger gate ($T^\dagger$). Inverse of the T gate. */
 constexpr Matrix2x2 Tdag() noexcept {
     return Matrix2x2(
         {1.0, 0.0}, {0.0, 0.0},
@@ -82,7 +89,7 @@ constexpr Matrix2x2 Tdag() noexcept {
     );
 }
 
-// Square root of NOT (√X / SX)
+/** @brief Square root of NOT gate ($\sqrt{X}$ / SX). */
 constexpr Matrix2x2 SqrtX() noexcept {
     return Matrix2x2(
         {0.5,  0.5}, {0.5, -0.5},
@@ -90,7 +97,11 @@ constexpr Matrix2x2 SqrtX() noexcept {
     );
 }
 
-// Arbitrary Phase Shift P(phi) = diag(1, e^(i*phi))
+/**
+ * @brief Arbitrary Phase Shift gate $P(\phi)$.
+ * 
+ * @param phi Phase angle in radians.
+ */
 inline Matrix2x2 Phase(double phi) noexcept {
     return Matrix2x2(
         {1.0, 0.0}, {0.0, 0.0},
@@ -98,7 +109,11 @@ inline Matrix2x2 Phase(double phi) noexcept {
     );
 }
 
-// Rotation Rx(θ) = exp(-i * θ/2 * X)
+/**
+ * @brief Rotation around the X-axis: $R_x(\theta) = \exp(-i \frac{\theta}{2} X)$.
+ * 
+ * @param theta Rotation angle in radians.
+ */
 inline Matrix2x2 Rx(double theta) noexcept {
     const double half = theta * 0.5;
     const Complex c = {cos(half), 0.0};
@@ -107,7 +122,11 @@ inline Matrix2x2 Rx(double theta) noexcept {
     return Matrix2x2(c, s, s, c);
 }
 
-// Rotation Ry(θ) = exp(-i * θ/2 * Y)
+/**
+ * @brief Rotation around the Y-axis: $R_y(\theta) = \exp(-i \frac{\theta}{2} Y)$.
+ * 
+ * @param theta Rotation angle in radians.
+ */
 inline Matrix2x2 Ry(double theta) noexcept {
     const double half = theta * 0.5;
     const double c = cos(half);
@@ -119,7 +138,11 @@ inline Matrix2x2 Ry(double theta) noexcept {
     );
 }
 
-// Rotation Rz(θ) = exp(-i * θ/2 * Z)
+/**
+ * @brief Rotation around the Z-axis: $R_z(\theta) = \exp(-i \frac{\theta}{2} Z)$.
+ * 
+ * @param theta Rotation angle in radians.
+ */
 inline Matrix2x2 Rz(double theta) noexcept {
     const double half = theta * 0.5;
     const Complex e_neg = exp_i(-half);
@@ -131,7 +154,13 @@ inline Matrix2x2 Rz(double theta) noexcept {
     );
 }
 
-// Universal Single-Qubit Gate U3(theta, phi, lambda)
+/**
+ * @brief Universal single-qubit gate $U_3(\theta, \phi, \lambda)$.
+ * 
+ * @param theta Polar angle.
+ * @param phi   Azimuthal angle.
+ * @param lambda Phase angle.
+ */
 inline Matrix2x2 U3(double theta, double phi, double lambda) noexcept {
     const double half = theta * 0.5;
     const double c = cos(half);
@@ -147,7 +176,7 @@ inline Matrix2x2 U3(double theta, double phi, double lambda) noexcept {
 // Two-Qubit Gates (4x4)
 // -------------------------------------------------------------------------
 
-// Controlled-NOT (CNOT / CX)
+/** @brief Controlled-NOT (CNOT / CX) gate. */
 constexpr Matrix4x4 CNOT() noexcept {
     Matrix4x4 res{};
     res.m[0][0] = {1.0, 0.0};
@@ -157,7 +186,7 @@ constexpr Matrix4x4 CNOT() noexcept {
     return res;
 }
 
-// Controlled-Y (CY)
+/** @brief Controlled-Y (CY) gate. */
 constexpr Matrix4x4 CY() noexcept {
     Matrix4x4 res{};
     res.m[0][0] = {1.0, 0.0};
@@ -167,7 +196,7 @@ constexpr Matrix4x4 CY() noexcept {
     return res;
 }
 
-// Controlled-Z (CZ)
+/** @brief Controlled-Z (CZ) gate. */
 constexpr Matrix4x4 CZ() noexcept {
     Matrix4x4 res{};
     res.m[0][0] = {1.0, 0.0};
@@ -177,7 +206,7 @@ constexpr Matrix4x4 CZ() noexcept {
     return res;
 }
 
-// Controlled-Hadamard (CH)
+/** @brief Controlled-Hadamard (CH) gate. */
 constexpr Matrix4x4 CH() noexcept {
     Matrix4x4 res{};
     res.m[0][0] = {1.0, 0.0};
@@ -189,7 +218,11 @@ constexpr Matrix4x4 CH() noexcept {
     return res;
 }
 
-// Controlled-Phase CPHASE(phi) / CRz(phi)
+/**
+ * @brief Controlled-Phase gate ($CPHASE(\phi)$ / $CR_z(\phi)$).
+ * 
+ * @param phi Phase angle in radians.
+ */
 inline Matrix4x4 CPhase(double phi) noexcept {
     Matrix4x4 res{};
     res.m[0][0] = {1.0, 0.0};
@@ -199,7 +232,11 @@ inline Matrix4x4 CPhase(double phi) noexcept {
     return res;
 }
 
-// Controlled-Rx CRx(theta)
+/**
+ * @brief Controlled-Rx rotation gate ($CR_x(\theta)$).
+ * 
+ * @param theta Rotation angle in radians.
+ */
 inline Matrix4x4 CRx(double theta) noexcept {
     const double half = theta * 0.5;
     const Complex c = {cos(half), 0.0};
@@ -215,7 +252,7 @@ inline Matrix4x4 CRx(double theta) noexcept {
     return res;
 }
 
-// SWAP
+/** @brief SWAP gate. Swaps states of two qubits. */
 constexpr Matrix4x4 SWAP() noexcept {
     Matrix4x4 res{};
     res.m[0][0] = {1.0, 0.0};
@@ -225,7 +262,7 @@ constexpr Matrix4x4 SWAP() noexcept {
     return res;
 }
 
-// √SWAP (Square Root of SWAP)
+/** @brief Square root of SWAP ($\sqrt{\text{SWAP}}$) gate. */
 constexpr Matrix4x4 SqrtSWAP() noexcept {
     Matrix4x4 res{};
     res.m[0][0] = {1.0, 0.0};
@@ -237,7 +274,7 @@ constexpr Matrix4x4 SqrtSWAP() noexcept {
     return res;
 }
 
-// iSWAP
+/** @brief iSWAP gate. */
 constexpr Matrix4x4 iSWAP() noexcept {
     Matrix4x4 res{};
     res.m[0][0] = {1.0, 0.0};
@@ -251,7 +288,7 @@ constexpr Matrix4x4 iSWAP() noexcept {
 // Three-Qubit Gates (8x8)
 // -------------------------------------------------------------------------
 
-// Toffoli (CCNOT) — control1=0, control2=1, target=2
+/** @brief Toffoli (CCNOT) gate. Control qubits 0 and 1, target qubit 2. */
 constexpr Matrix8x8 TOFFOLI() noexcept {
     Matrix8x8 res{};
     for (int i = 0; i < 6; ++i) {
@@ -262,7 +299,7 @@ constexpr Matrix8x8 TOFFOLI() noexcept {
     return res;
 }
 
-// CSWAP (Fredkin) — control=0, target1=1, target2=2
+/** @brief CSWAP (Fredkin) gate. Control qubit 0, target qubits 1 and 2. */
 constexpr Matrix8x8 CSWAP() noexcept {
     Matrix8x8 res{};
     for (int i = 0; i < 5; ++i) {
