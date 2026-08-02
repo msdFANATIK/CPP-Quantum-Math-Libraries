@@ -6,11 +6,16 @@
 namespace qm {
 
 /**
- * @brief Measures a single qubit and collapses the statevector.
- * @param state  State to measure (modified in-place)
- * @param qubit  Qubit index
- * @param rng    Random number generator
- * @return Measurement result (0 or 1)
+ * @brief Measures a single qubit and collapses the statevector in-place.
+ * 
+ * Calculates the probability distribution for the target qubit, samples a 
+ * measurement outcome (0 or 1) using the provided RNG, projects the state, 
+ * and re-normalizes the remaining amplitudes.
+ * 
+ * @param state  Reference to the quantum state to measure and modify.
+ * @param qubit  Index of the target qubit to measure.
+ * @param rng    Reference to the pseudo-random number generator.
+ * @return Measurement result (0 or 1), or 0 if the qubit index is out of bounds.
  */
 inline int measure_qubit(State& state, unsigned qubit, RNG& rng) noexcept {
     if (qubit >= state.n) return 0;
@@ -52,8 +57,15 @@ inline int measure_qubit(State& state, unsigned qubit, RNG& rng) noexcept {
 }
 
 /**
- * @brief Measures all qubits and collapses to a computational basis state.
- * @return Outcome as integer bitstring (0 … 2^n - 1)
+ * @brief Measures all qubits simultaneously and collapses the state to a computational basis state.
+ * 
+ * Samples a specific basis state based on the probability distribution of the entire 
+ * statevector, collapses all amplitudes to zero except for the winning outcome, 
+ * which is set to 1.0.
+ * 
+ * @param state Reference to the quantum state to measure and collapse.
+ * @param rng   Reference to the pseudo-random number generator.
+ * @return Outcome as an integer bitstring in the range [0, 2^n - 1].
  */
 inline unsigned measure_all(State& state, RNG& rng) noexcept {
     const unsigned size = state.amp.get_size();
@@ -65,7 +77,8 @@ inline unsigned measure_all(State& state, RNG& rng) noexcept {
 
     for (unsigned i = 0; i < size; ++i) {
         cumulative += state.amp[i].norm_sq();
-        if (r <= cumulative) {
+        // Використовуємо порівняння з урахуванням похибки плаваючої комии
+        if (r <= cumulative || i == size - 1) {
             outcome = i;
             break;
         }
