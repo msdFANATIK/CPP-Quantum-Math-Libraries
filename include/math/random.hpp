@@ -12,8 +12,8 @@ namespace qm {
  * for floating-point values and unbiased range generation.
  */
 struct RNG {
-    uint64_t state; ///< Internal state of the generator.
-    uint64_t inc;   ///< Stream increment (determines the statistical sequence stream).
+    unsigned long long state; ///< Internal state of the generator.
+    unsigned long long inc;   ///< Stream increment (determines the statistical sequence stream).
 
     /**
      * @brief Constructs and seeds the RNG.
@@ -21,7 +21,7 @@ struct RNG {
      * @param init_state Initial state value (seed).
      * @param init_seq   Sequence selector stream identifier.
      */
-    explicit RNG(uint64_t init_state = 0x853c42e673070219ULL, uint64_t init_seq = 0xda3e39cb9fb20720ULL) noexcept {
+    explicit RNG(unsigned long long init_state = 0x853c42e673070219ULL, unsigned long long init_seq = 0xda3e39cb9fb20720ULL) noexcept {
         seed(init_state, init_seq);
     }
 
@@ -31,7 +31,7 @@ struct RNG {
      * @param init_state New state value (seed).
      * @param init_seq   New sequence selector stream identifier.
      */
-    inline void seed(uint64_t init_state, uint64_t init_seq) noexcept {
+    inline void seed(unsigned long long init_state, unsigned long long init_seq) noexcept {
         state = 0ULL;
         inc = (init_seq << 1u) | 1u;
         next_u32();
@@ -44,11 +44,11 @@ struct RNG {
      * 
      * @return A 32-bit unsigned integer.
      */
-    inline uint32_t next_u32() noexcept {
-        uint64_t oldstate = state;
+    inline unsigned int next_u32() noexcept {
+        unsigned long long oldstate = state;
         state = oldstate * 6364136223846793005ULL + inc;
-        uint32_t xorshifted = static_cast<uint32_t>(((oldstate >> 18u) ^ oldstate) >> 27u);
-        uint32_t rot = static_cast<uint32_t>(oldstate >> 59u);
+        unsigned int xorshifted = static_cast<unsigned int>(((oldstate >> 18u) ^ oldstate) >> 27u);
+        unsigned int rot = static_cast<unsigned int>(oldstate >> 59u);
         return (xorshifted >> rot) | (xorshifted << ((~rot + 1u) & 31u));
     }
 
@@ -57,8 +57,8 @@ struct RNG {
      * 
      * @return A 64-bit unsigned integer.
      */
-    inline uint64_t next_u64() noexcept {
-        return (static_cast<uint64_t>(next_u32()) << 32) | next_u32();
+    inline unsigned long long next_u64() noexcept {
+        return (static_cast<unsigned long long>(next_u32()) << 32) | next_u32();
     }
 
     /**
@@ -82,19 +82,19 @@ struct RNG {
      * @param max Upper bound (inclusive).
      * @return A pseudo-random 32-bit integer within the specified range.
      */
-    inline uint32_t next_range(uint32_t min, uint32_t max) noexcept {
-        uint32_t range = max - min + 1;
-        uint64_t random_product = static_cast<uint64_t>(next_u32()) * range;
-        uint32_t low = static_cast<uint32_t>(random_product);
+    inline unsigned int next_range(unsigned int min, unsigned int max) noexcept {
+        unsigned int range = max - min + 1;
+        unsigned long long random_product = static_cast<unsigned long long>(next_u32()) * range;
+        unsigned int low = static_cast<unsigned int>(random_product);
         
         if (low < range) {
-            uint32_t threshold = -range % range;
+            unsigned int threshold = -range % range;
             while (low < threshold) {
-                random_product = static_cast<uint64_t>(next_u32()) * range;
-                low = static_cast<uint32_t>(random_product);
+                random_product = static_cast<unsigned long long>(next_u32()) * range;
+                low = static_cast<unsigned int>(random_product);
             }
         }
-        return min + static_cast<uint32_t>(random_product >> 32);
+        return min + static_cast<unsigned int>(random_product >> 32);
     }
 
     /**
