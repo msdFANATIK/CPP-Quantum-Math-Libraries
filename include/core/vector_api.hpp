@@ -1,55 +1,60 @@
-#pragma once
+#ifndef QM_VECTOR_HPP
+#define QM_VECTOR_HPP
 
 #include "array.hpp"
 
 namespace qm {
 
 /**
- * @brief High-level dynamic array of complex numbers.
- *
- * Vector is a user-friendly wrapper around the low-level Array class.
- * It provides a complete standard container interface (push_back, pop_back, etc.)
- * while leveraging Array as the storage back-end for optimal execution speed.
- *
- * Prefer Vector for general application-level data manipulation.
- * Prefer Array for performance-critical internals with minimal overhead.
+ * @file vector.hpp
+ * @brief High-level dynamic vector abstraction built over zero-dependency aligned Array storage.
+ */
+
+/**
+ * @brief High-level dynamic container wrapper for complex number sequences.
+ * 
+ * Provides standard container semantics (push_back, pop_back, resize) over low-level Array.
+ * Designed with 64-byte alignment, zero C++ standard library dependencies,
+ * and high-performance quantum simulation interfaces.
  */
 struct Vector {
-    Array impl; ///< Underlying storage implementation
+    Array impl; ///< Underlying 64-byte aligned contiguous storage memory.
 
     // ---------------------------------------------------------------------
     // Constructors & Destructor
     // ---------------------------------------------------------------------
 
-    /** @brief Constructs an empty vector. */
+    /** 
+     * @brief Constructs an empty vector with zero size and capacity.
+     */
     Vector() noexcept = default;
 
     /**
-     * @brief Constructs a vector with @p n default-initialized elements.
-     * @param n Number of elements.
+     * @brief Constructs a vector with @p n zero-initialized elements (0.0, 0.0).
+     * @param n Initial element count.
      */
-    explicit Vector(unsigned n) : impl(n) {}
+    explicit Vector(size_t n) : impl(n) {}
 
     /**
      * @brief Constructs a vector with @p n copies of @p value.
-     * @param n Number of elements.
-     * @param value Value used to initialize elements.
+     * @param n Initial element count.
+     * @param value Complex value used to initialize elements.
      */
-    Vector(unsigned n, const Complex& value) : impl(n) {
-        impl.fill(value);
+    Vector(size_t n, const Complex& value) : impl() {
+        impl.resize(n, value);
     }
 
-    /** @brief Copy constructor. Defaulted via compiler-generated Rule of 5. */
+    /** @brief Copy constructor. Performs deep copy of memory buffer. */
     Vector(const Vector& other) = default;
 
-    /** @brief Move constructor. Defaulted via compiler-generated Rule of 5. */
+    /** @brief Move constructor. Transfers buffer ownership. */
     Vector(Vector&& other) noexcept = default;
 
-    /** @brief Destructor. */
-    ~Vector() = default;
+    /** @brief Destructor. Automatically cleans up heap resources. */
+    ~Vector() noexcept = default;
 
     // ---------------------------------------------------------------------
-    // Assignment
+    // Assignment Operators
     // ---------------------------------------------------------------------
 
     /** @brief Copy assignment operator. */
@@ -64,28 +69,27 @@ struct Vector {
 
     /**
      * @brief Access element at index @p i without bounds checking.
-     * @param i Index of element to access.
-     * @return Reference to the target element.
+     * @param i Index of target element.
+     * @return Reference to element.
      */
-    Complex& operator[](unsigned i) noexcept { return impl[i]; }
+    Complex& operator[](size_t i) noexcept { return impl[i]; }
 
-    /** @brief Const overload for element access at index @p i. */
-    const Complex& operator[](unsigned i) const noexcept { return impl[i]; }
+    /** @brief Const overload for indexing. */
+    const Complex& operator[](size_t i) const noexcept { return impl[i]; }
 
-    /** @brief Returns reference to the first element. */
+    /** @brief Reference to first element. */
     Complex& front() noexcept { return impl.front(); }
     const Complex& front() const noexcept { return impl.front(); }
 
-    /** @brief Returns reference to the last element. */
+    /** @brief Reference to last active element. */
     Complex& back() noexcept { return impl.back(); }
     const Complex& back() const noexcept { return impl.back(); }
 
     /**
-     * @brief Returns pointer to the contiguous storage array.
-     * @note Pointer invalidation occurs on capacity reallocation.
+     * @brief Raw pointer to contiguous 64-byte aligned storage array.
      */
-    Complex* data() noexcept { return impl.data_ptr(); }
-    const Complex* data() const noexcept { return impl.data_ptr(); }
+    Complex* data() noexcept { return impl.data(); }
+    const Complex* data() const noexcept { return impl.data(); }
 
     // ---------------------------------------------------------------------
     // Iterators
@@ -104,23 +108,23 @@ struct Vector {
     // Capacity
     // ---------------------------------------------------------------------
 
-    /** @brief Checks if vector container is empty. */
+    /** @brief True if element count is 0. */
     bool empty() const noexcept { return impl.empty(); }
 
-    /** @brief Returns current element count. */
-    unsigned size() const noexcept { return impl.get_size(); }
+    /** @brief Active number of complex elements. */
+    size_t size() const noexcept { return impl.size(); }
 
-    /** @brief Returns current allocated capacity limit. */
-    unsigned capacity() const noexcept { return impl.get_capacity(); }
+    /** @brief Maximum elements before buffer reallocation triggers. */
+    size_t capacity() const noexcept { return impl.capacity(); }
 
     /**
-     * @brief Reserves minimum capacity space.
-     * @param new_cap Target capacity allocation.
+     * @brief Reserves minimum capacity space to avoid frequent reallocations.
+     * @param new_cap Required target capacity.
      */
-    void reserve(unsigned new_cap) { impl.reserve(new_cap); }
+    void reserve(size_t new_cap) { impl.reserve(new_cap); }
 
     /**
-     * @brief Shrinks capacity allocation to match current element size.
+     * @brief Reduces capacity allocation matching exact size.
      */
     void shrink_to_fit() { impl.shrink_to_fit(); }
 
@@ -130,10 +134,10 @@ struct Vector {
 
     /**
      * @brief Resizes container to hold @p n elements.
-     * @param n New size.
-     * @param value Default value for new elements.
+     * @param n Target element size.
+     * @param value Default value for new slots.
      */
-    void resize(unsigned n, const Complex& value = Complex{}) {
+    void resize(size_t n, const Complex& value = Complex{0.0, 0.0}) {
         impl.resize(n, value);
     }
 
@@ -142,39 +146,42 @@ struct Vector {
      * @param value Element value to push.
      */
     void push_back(const Complex& value) {
-        const unsigned sz = impl.get_size();
-        const unsigned cap = impl.get_capacity();
+        const size_t sz = impl.size();
+        const size_t cap = impl.capacity();
 
         if (sz >= cap) {
-            const unsigned new_cap = (cap == 0) ? 4u : cap + (cap >> 1);
+            const size_t new_cap = (cap == 0) ? 8 : cap + (cap >> 1);
             impl.reserve(new_cap);
         }
-        impl.resize(sz + 1, value);
+        impl.push_back(value);
     }
 
     /**
-     * @brief Removes the last element from the vector.
+     * @brief Removes the last active element from vector.
      */
     void pop_back() noexcept {
         if (!impl.empty()) {
-            impl.resize(impl.get_size() - 1);
+            impl.resize(impl.size() - 1);
         }
     }
 
-    /** @brief Fills vector elements with uniform value. */
+    /** @brief Overwrites active elements with uniform Complex value. */
     void fill(const Complex& value) noexcept { impl.fill(value); }
 
-    /** @brief Clears vector contents without releasing allocated memory. */
+    /** @brief Resets size to zero without releasing underlying allocated heap. */
     void clear() noexcept { impl.clear(); }
 
-    /** @brief Swaps internal data state with another vector. */
+    /** @brief Swaps contents with another Vector instance. */
     void swap(Vector& other) noexcept { impl.swap(other.impl); }
 
-    /** @brief Zeroes out all elements fast without reallocation (zero external deps). */
+    /** @brief Resets all active vector elements to zero (0.0, 0.0). */
     void fill_zero() noexcept { impl.fill_zero(); }
 
-    /** @brief Resets vector to zero-filled state. */
+    /** @brief Alias to fill_zero(). */
     void reset() noexcept { impl.fill_zero(); }
 };
 
 } // namespace qm
+
+#endif // QM_VECTOR_HPP
+
