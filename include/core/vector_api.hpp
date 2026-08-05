@@ -6,7 +6,7 @@
 namespace qm {
 
 /**
- * @file vector.hpp
+ * @file vector_api.hpp
  * @brief High-level dynamic vector abstraction built over zero-dependency aligned Array storage.
  */
 
