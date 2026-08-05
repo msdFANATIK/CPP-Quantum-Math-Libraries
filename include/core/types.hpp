@@ -1,12 +1,18 @@
-#pragma once
+#ifndef QM_COMPLEX_HPP
+#define QM_COMPLEX_HPP
 
 namespace qm {
 
 /**
+ * @file types.hpp
+ * @brief High-performance zero-dependency complex number structure for quantum state computation.
+ */
+
+/**
  * @brief Lightweight representation of a complex number z = re + i * im.
- *
- * Provides a complete set of arithmetic operations, comparisons, and basic
- * complex-plane utility methods designed for zero-overhead evaluation.
+ * 
+ * Fully standalone implementation optimized for SIMD/FMA instruction auto-vectorization.
+ * Operates with absolute zero dependencies on C/C++ standard math libraries.
  */
 struct Complex {
     double re; ///< Real component of the complex number.
@@ -17,7 +23,7 @@ struct Complex {
     // ---------------------------------------------------------------------
 
     /**
-     * @brief Constructs a complex number from real and imaginary parts.
+     * @brief Constructs a complex number from real and imaginary components.
      * @param r Real part (defaults to 0.0).
      * @param i Imaginary part (defaults to 0.0).
      */
@@ -27,9 +33,14 @@ struct Complex {
     // Unary Operators
     // ---------------------------------------------------------------------
 
-    /** @brief Returns the negation of the complex number (-z). */
+    /** @brief Returns negation of the complex number (-z). */
     constexpr Complex operator-() const noexcept {
         return {-re, -im};
+    }
+
+    /** @brief Unary plus operator (+z). */
+    constexpr Complex operator+() const noexcept {
+        return *this;
     }
 
     // ---------------------------------------------------------------------
@@ -57,9 +68,10 @@ struct Complex {
     /** @brief Divides two complex numbers. */
     constexpr Complex operator/(const Complex& o) const noexcept {
         const double den = o.norm_sq();
+        const double inv_den = (den != 0.0) ? (1.0 / den) : 0.0;
         return {
-            (re * o.re + im * o.im) / den,
-            (im * o.re - re * o.im) / den
+            (re * o.re + im * o.im) * inv_den,
+            (im * o.re - re * o.im) * inv_den
         };
     }
 
@@ -67,111 +79,146 @@ struct Complex {
     // Binary Arithmetic Operators (Scalar Operations)
     // ---------------------------------------------------------------------
 
-    /** @brief Multiplies complex number by a scalar (z * s). */
-    constexpr Complex operator*(double s) const noexcept {
-        return {re * s, im * s};
+    constexpr Complex operator+(double s) const noexcept { return {re + s, im}; }
+    constexpr Complex operator-(double s) const noexcept { return {re - s, im}; }
+    constexpr Complex operator*(double s) const noexcept { return {re * s, im * s}; }
+    constexpr Complex operator/(double s) const noexcept { 
+        const double inv_s = 1.0 / s;
+        return {re * inv_s, im * inv_s}; 
     }
 
-    /** @brief Multiplies scalar by a complex number (s * z). */
-    friend constexpr Complex operator*(double s, const Complex& z) noexcept {
-        return z * s;
-    }
-
-    /** @brief Divides complex number by a scalar (z / s). */
-    constexpr Complex operator/(double s) const noexcept {
-        return {re / s, im / s};
-    }
-
-    /** @brief Divides a scalar by a complex number (s / z). */
-    friend Complex operator/(double s, const Complex& z) noexcept {
+    friend constexpr Complex operator+(double s, const Complex& z) noexcept { return {s + z.re, z.im}; }
+    friend constexpr Complex operator-(double s, const Complex& z) noexcept { return {s - z.re, -z.im}; }
+    friend constexpr Complex operator*(double s, const Complex& z) noexcept { return z * s; }
+    friend constexpr Complex operator/(double s, const Complex& z) noexcept {
         const double den = z.norm_sq();
-        return {s * z.re / den, -s * z.im / den};
+        const double inv_den = (den != 0.0) ? (s / den) : 0.0;
+        return {inv_den * z.re, -inv_den * z.im};
     }
 
     // ---------------------------------------------------------------------
     // Compound Assignment Operators
     // ---------------------------------------------------------------------
 
-    /** @brief Adds and assigns another complex number. */
     constexpr Complex& operator+=(const Complex& o) noexcept {
         re += o.re;
         im += o.im;
         return *this;
     }
 
-    /** @brief Subtracts and assigns another complex number. */
     constexpr Complex& operator-=(const Complex& o) noexcept {
         re -= o.re;
         im -= o.im;
         return *this;
     }
 
-    /** @brief Multiplies and assigns another complex number. */
     constexpr Complex& operator*=(const Complex& o) noexcept {
-        const double new_re = re * o.re - im * o.im;
-        const double new_im = re * o.im + im * o.re;
-        re = new_re;
-        im = new_im;
+        const double n_re = re * o.re - im * o.im;
+        const double n_im = re * o.im + im * o.re;
+        re = n_re;
+        im = n_im;
         return *this;
     }
 
-    /** @brief Multiplies and assigns a scalar. */
-    constexpr Complex& operator*=(double s) noexcept {
-        re *= s;
-        im *= s;
+    constexpr Complex& operator/=(const Complex& o) noexcept {
+        *this = *this / o;
         return *this;
     }
 
-    /** @brief Divides and assigns a scalar. */
-    constexpr Complex& operator/=(double s) noexcept {
-        re /= s;
-        im /= s;
-        return *this;
+    constexpr Complex& operator+=(double s) noexcept { re += s; return *this; }
+    constexpr Complex& operator-=(double s) noexcept { re -= s; return *this; }
+    constexpr Complex& operator*=(double s) noexcept { re *= s; im *= s; return *this; }
+    constexpr Complex& operator/=(double s) noexcept { 
+        const double inv_s = 1.0 / s;
+        re *= inv_s; 
+        im *= inv_s; 
+        return *this; 
     }
 
     // ---------------------------------------------------------------------
-    // Mathematical Utilities
+    // Mathematical Utilities & Fast Hardware Intrinsics
     // ---------------------------------------------------------------------
 
     /**
-     * @brief Computes the squared norm (magnitude squared): |z|^2 = re^2 + im^2.
-     * @note Faster than mod() as it avoids a sqrt call.
+     * @brief Computes squared magnitude |z|^2 = re^2 + im^2.
+     * @note Avoids square root calculation for fast comparisons.
      */
     constexpr double norm_sq() const noexcept {
         return re * re + im * im;
     }
 
-    /** @brief Returns the complex conjugate z* = re - i * im. */
+    /** @brief Returns complex conjugate z* = re - i * im. */
     constexpr Complex conj() const noexcept {
         return {re, -im};
     }
 
-    /** @brief Computes the magnitude (modulus) |z| = sqrt(re^2 + im^2). */
-    constexpr double mod() const noexcept;
+    /**
+     * @brief Computes complex modulus |z| = sqrt(re^2 + im^2) using direct hardware FPU/AVX instruction.
+     */
+    double mod() const noexcept {
+        const double val = norm_sq();
+        if (val <= 0.0) return 0.0;
+
+        double res = val;
+#if defined(__x86_64__) || defined(_M_X64)
+        asm volatile("sqrtsd %1, %0" : "=x"(res) : "x"(val));
+#elif defined(__aarch64__)
+        asm volatile("fsqrt %d0, %d1" : "=w"(res) : "w"(val));
+#else
+        // Zero-stdlib Newton-Raphson fallback algorithm
+        double x = val * 0.5;
+        for (int i = 0; i < 6; ++i) {
+            res = 0.5 * (res + val / res);
+        }
+#endif
+        return res;
+    }
+
+    /**
+     * @brief Creates complex number from polar coordinates e^(i * phi).
+     * Computes unit magnitude state phase shift.
+     */
+    static Complex from_polar(double r, double theta) noexcept {
+        // Polynomial zero-stdlib Taylor/CORDIC approximation for cos/sin unit phase
+        // Useful for quantum gates computation without <cmath>
+        auto fast_cos = [](double x) noexcept -> double {
+            // Map angle to [-PI, PI]
+            while (x > 3.14159265358979323846) x -= 6.28318530717958647692;
+            while (x < -3.14159265358979323846) x += 6.28318530717958647692;
+            const double x2 = x * x;
+            return 1.0 - x2 * (0.5 - x2 * (1.0 / 24.0 - x2 * (1.0 / 720.0)));
+        };
+
+        auto fast_sin = [](double x) noexcept -> double {
+            while (x > 3.14159265358979323846) x -= 6.28318530717958647692;
+            while (x < -3.14159265358979323846) x += 6.28318530717958647692;
+            const double x2 = x * x;
+            return x * (1.0 - x2 * (1.0 / 6.0 - x2 * (1.0 / 120.0 - x2 * (1.0 / 5040.0))));
+        };
+
+        return {r * fast_cos(theta), r * fast_sin(theta)};
+    }
 
     // ---------------------------------------------------------------------
     // Accessors
     // ---------------------------------------------------------------------
 
-    /** @brief Returns the real component. */
     constexpr double real() const noexcept { return re; }
-
-    /** @brief Returns the imaginary component. */
     constexpr double imag() const noexcept { return im; }
 
     // ---------------------------------------------------------------------
     // Comparison Operators
     // ---------------------------------------------------------------------
 
-    /** @brief Exact equality comparison. */
     constexpr bool operator==(const Complex& o) const noexcept {
         return re == o.re && im == o.im;
     }
 
-    /** @brief Inequality comparison. */
     constexpr bool operator!=(const Complex& o) const noexcept {
         return !(*this == o);
     }
 };
 
 } // namespace qm
+
+#endif // QM_COMPLEX_HPP
